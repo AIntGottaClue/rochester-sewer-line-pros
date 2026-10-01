@@ -1,0 +1,73 @@
+---
+import LeadForm from '../components/LeadForm.astro';
+import { siteConfig as s } from '../data/siteConfig';
+import { home, services, neighborhoods, guides } from '../data/pages';
+const {page,slug} = Astro.props;
+const isHome = slug === '';
+const path = slug ? `/${slug}/` : '/';
+const canonical = s.origin + path;
+const title = `${page.title} | ${s.brand}`;
+const location = isHome ? 'Homepage' : page.landing ? `Landing page: ${slug}` : `${s.city}, ${s.stateCode}`;
+const hasLpPhone = Boolean(s.lpPhoneHref && s.lpPhoneDisplay);
+const call = page.landing ? (hasLpPhone ? {href:`tel:${s.lpPhoneHref}`,label:s.lpPhoneDisplay} : {href:'#contact',label:'Request a call'}) : {href:`tel:${s.phoneHref}`,label:s.phoneDisplay};
+const formId = `${s.brand.replaceAll(' ','-')}-${slug.replaceAll('/','-') || 'Homepage'}-Form`;
+const graph:any[] = [
+ {'@type':'Organization','@id':s.origin+'/#organization',name:s.brand,url:s.origin+'/',description:`Sewer service information and requests in ${s.city}, ${s.state}.`,areaServed:{'@type':'City',name:`${s.city}, ${s.state}`}},
+ {'@type':'WebPage','@id':canonical+'#webpage',url:canonical,name:title,description:page.description,about:{'@id':s.origin+'/#organization'}},
+];
+if (!page.legal) graph.push({'@type':'Service','@id':canonical+'#service',name:page.title,serviceType:'Sewer line service information and requests',provider:{'@id':s.origin+'/#organization'},areaServed:{'@type':'City',name:`${s.city}, ${s.state}`}});
+if (page.faqs?.length) graph.push({'@type':'FAQPage','@id':canonical+'#faq',mainEntity:page.faqs.map(([name,text])=>({'@type':'Question',name,acceptedAnswer:{'@type':'Answer',text}}))});
+---
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+ <title>{title}</title><meta name="description" content={page.description} />
+ <link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={page.description} /><meta property="og:url" content={canonical} /><meta property="og:type" content="website" />
+ {page.landing && <meta name="robots" content="noindex,nofollow" />}
+ <link rel="stylesheet" href="/assets/site.css" />
+ <script is:inline type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@graph':graph})} />
+</head>
+<body>
+ <a class="skip" href="#main">Skip to content</a>
+ {!page.landing && <div class="utility"><div class="wrap">{s.city}, {s.state}</div></div>}
+ <header class:list={['header',{'lp-header':page.landing}]}><div class:list={['wrap',page.landing?'lp-nav':'nav']}>
+ <a class="brand" href="/">{s.city} <i>Sewer Line</i> Pros</a>
+ {page.landing ? <a class="btn" href={call.href} aria-label={`Contact ${s.brand}`}>{call.label}</a> : <>
+ <button class="menu-button" data-menu-button type="button" aria-controls="site-nav" aria-expanded="false">Menu</button>
+ <nav class="navlinks" data-nav id="site-nav" aria-label="Main navigation"><a href="/">Home</a><a href="/#services">Services</a><a href="/#how-it-works">How it works</a><a href="/#contact">Contact</a><a class="btn" data-phone href={call.href} aria-label={`Call ${s.brand} at ${call.label}`}>{call.label}</a></nav>
+ </>}
+ </div></header>
+ <main id="main">
+ <section class:list={['hero',{'lp-hero':page.landing}]}><div class:list={['wrap',{'lp-hero-grid':page.landing}]}>
+ <div><h1>{page.title}</h1><p>{page.intro}</p>
+ {!page.legal && <div class="actions"><a class="btn" href={call.href} aria-label={`Contact ${s.brand}`}>{call.label}</a><a class="btn btn-outline" href="#contact">Describe the problem</a></div>}
+ </div>
+ {page.landing && !page.landingIndex && <div class="lp-form-shell"><LeadForm formId={formId} location={location} /></div>}
+ {!page.legal && !page.landing && <div class="hero-art" aria-hidden="true"><div class="orbit"></div><div class="pipe"></div><div class="spark"></div></div>}
+ </div></section>
+ {isHome && <>
+ <section class="section" id="services"><div class="wrap"><h2>Start with the condition of the line.</h2><p class="intro">Recurring backups and several slow drains deserve a look beyond the nearest fixture. These pages explain the different sewer-service questions and what should be checked before choosing work.</p><div class="grid">{services.map(([name,route,text])=><article class="card"><h3>{name}</h3><p>{text}</p><a href={`/${route}/`}>Learn about this service →</a></article>)}</div></div></section>
+ <section class="section alt"><div class="wrap split"><div><h2>{page.localHeading}</h2>{page.local.map(text=><p>{text}</p>)}</div><div class="panel"><strong>Look beyond a temporary clearing.</strong><p>Ask what the pipe is made of and where the inspection found damage. Clearing a blockage and fixing a damaged lateral are different tasks.</p></div></div></section>
+ <section class="section"><div class="wrap"><h2>The property history matters.</h2><p>Our neighborhood pages connect local building history with useful inspection questions. The address gives context, but the recording and repair records establish the condition of an individual line.</p><div class="grid">{neighborhoods.map(([name,route])=><article class="card"><h3>{name}</h3><p>Review the neighborhood setting and what to bring to a sewer inspection. Do not assume pipe material or condition from the home's location alone.</p><a href={`/${route}/`}>Sewer line questions in {name} →</a></article>)}</div></div></section>
+ <section class="section alt"><div class="wrap"><h2>Understand the work before the digging.</h2><p>Compare the condition findings with the proposed repair or replacement. Use the local guide to identify the official sources and questions to confirm before work starts.</p><div class="actions">{guides.map(([name,route])=><a class="btn" href={`/${route}/`}>{name}</a>)}</div></div></section>
+ <section class="section" id="how-it-works"><div class="wrap"><h2>From symptoms to a documented next step.</h2><div class="grid"><article class="card"><h3>Describe what happened.</h3><p>Note the drains affected, when symptoms started and whether wet weather changes the problem. Include earlier cleaning or repairs.</p></article><article class="card"><h3>Inspect the line.</h3><p>A qualified professional can check the lateral and document visible defects. Ask which portions were inspected and what remains uncertain.</p></article><article class="card"><h3>Compare the work.</h3><p>Use the findings to discuss cleaning, focused repair, rehabilitation or replacement. Confirm the local work steps and the written scope with the professional.</p></article></div></div></section>
+ </>}
+ {page.landingIndex && <section class="section"><div class="wrap"><div class="grid">{['sewer-backup','tree-roots','old-pipes'].map(route=><article class="card"><h2>{route.replaceAll('-',' ')}</h2><p>Describe the symptoms and request contact about the sewer line. A professional can assess the property and explain the next step.</p><a href={`/lp/${route}/`}>Open request page</a></article>)}</div></div></section>}
+ {!isHome && !page.legal && !page.landing && services.some(([,route])=>route===slug) && <section class="section alt"><div class="wrap narrow"><h2>{home.localHeading}</h2>{home.local.map(text=><p>{text}</p>)}</div></section>}
+ {!isHome && page.sections?.map(([heading,text],i)=><section class:list={['section',{alt:i%2===1}]}><div class="wrap narrow"><h2>{heading}</h2><p>{text}</p></div></section>)}
+ {page.sources?.length && <section class="section"><div class="wrap narrow"><h2>Reference sources</h2><p>These sources explain the local background or official guidance mentioned above. They do not imply an affiliation, and the professional should confirm current rules for the specific work.</p><ul>{page.sources.map(([name,url])=><li><a href={url} rel="noopener noreferrer">{name}</a></li>)}</ul></div></section>}
+ {page.faqs?.length > 0 && <section class="section alt"><div class="wrap narrow"><h2>Questions about {s.city} sewer lines</h2>{page.faqs.map(([question,answer])=><details><summary>{question}</summary><p>{answer}</p></details>)}</div></section>}
+ {!page.legal && !page.landingIndex && <section class="section contact" id="contact"><div class="wrap contact-grid"><div><h2>Tell us what is happening with your sewer line.</h2><p>Describe the symptoms, when they began and any work already done. A qualified professional can assess the condition and explain which next step fits.</p><p>For an active sewage backup, keep people and pets away from the affected area. Avoid using affected fixtures while arranging professional help.</p><a class="btn" href={call.href} aria-label={`Contact ${s.brand}`}>{call.label}</a></div>
+ {!page.landing && <LeadForm formId={formId} location={location} />}</div></section>}
+ </main>
+ <footer class="footer"><div class="wrap"><div class="footer-row"><div><a class="brand" href="/" style="color:white">{s.brand}</a><p>Independent sewer-service information and requests in {s.city}, {s.state}. We are not a municipal department. A qualified professional must confirm pipe condition and service availability.</p></div>
+ {!page.landing && <><div class="footer-guides"><strong>Guides</strong>{guides.map(([name,route])=><a href={`/${route}/`}>{name}</a>)}</div><div class="footer-guides"><strong>Neighborhoods</strong>{neighborhoods.map(([name,route])=><a href={`/${route}/`}>{name}</a>)}</div></>}
+ <nav aria-label="Footer navigation"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav></div><div class="copyright">© 2026 {s.brand}. No service or result is guaranteed.</div></div></footer>
+ <a class="fab-deal" href={call.href} aria-label={`Contact ${s.brand}`}><span class="fab-deal-ico" aria-hidden="true">☎</span><span class="fab-deal-text"><span class="fab-deal-text-k">{s.brand}</span><span class="fab-deal-text-v">{call.label}</span></span></a>
+ <script is:inline data-tracking-id={s.airchattyTrackingId} defer src="https://api.airchatty.com/js/external-tracking.js"></script><script is:inline defer src="/assets/site.js"></script>
+</body>
+</html>
+<style is:global>
+.narrow{max-width:850px}.lp-nav{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:80px}.lp-hero-grid{display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr)!important;gap:54px;align-items:center}.lp-form-shell{color:var(--ink);background:white;border-radius:12px;padding:26px;box-shadow:0 18px 42px #071d2290}.lp-form-shell .form{box-shadow:none;padding:0}.lp-form-shell .lead-success{color:var(--ink)}.lp-form-shell .lead-success p{color:var(--muted)}@media(max-width:900px){.lp-hero-grid{grid-template-columns:1fr!important;gap:30px}}.lp-nav .brand{font-size:clamp(16px,2vw,24px)}.lp-nav .btn{white-space:nowrap}[hidden]{display:none!important}.hero .actions{margin-top:24px}.narrow li{margin:10px 0}@media(max-width:480px){.lp-nav{gap:10px}.lp-nav .btn{font-size:13px;padding:10px}}
+</style>
