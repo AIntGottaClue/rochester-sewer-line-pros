@@ -26,6 +26,13 @@ if (page.faqs?.length) graph.push({'@type':'FAQPage','@id':canonical+'#faq',main
  <link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={page.description} /><meta property="og:url" content={canonical} /><meta property="og:type" content="website" />
  {page.landing && <meta name="robots" content="noindex,nofollow" />}
  <link rel="stylesheet" href="/assets/site.css" />
+ <script async src="https://www.googletagmanager.com/gtag/js?id=G-KY7H7RT63B"></script>
+ <script is:inline>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-KY7H7RT63B");
+ </script>
  <script is:inline type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@graph':graph})} />
 </head>
 <body>
