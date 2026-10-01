@@ -1,0 +1,8 @@
+---
+import { siteConfig as s } from "../data/siteConfig";
+const { formId, location } = Astro.props;
+---
+ <form class="form" data-lead-form id={formId} name={formId}>
+ <input type="text" class="honeypot" aria-hidden="true" tabindex="-1" name="page_site" value={s.brand} readonly /><input type="text" class="honeypot" aria-hidden="true" tabindex="-1" name="page_location" value={location} readonly /><input type="text" class="honeypot" aria-hidden="true" tabindex="-1" name="page_code" value="HSP" readonly />
+ <label>Your name<input name="full_name" autocomplete="name" required /></label><label>Phone number<input name="phone" type="tel" autocomplete="tel" required /></label><label>Email address<input name="email" type="email" autocomplete="email" /></label><label>What is happening?<textarea name="page_details" placeholder="Describe the affected drains, backup or recurring symptoms." required></textarea></label><label class="honeypot" aria-hidden="true">Leave this blank<input name="website" autocomplete="off" tabindex="-1" /></label><button class="btn" type="submit">Request a call</button><div role="status" aria-live="polite"></div><small>We use your information to respond to your request. Read our <a href="/privacy/">privacy policy</a> before submitting.</small>
+ </form>
